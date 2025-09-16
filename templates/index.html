@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>StyleSana - 이미지 스타일 변환</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>StyleSana</h1>
+        <p>사진을 업로드하고 원하는 스타일을 선택하여 예술 작품을 만들어보세요.</p>
+
+        <form id="image-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="image-upload">1. 이미지 업로드:</label>
+                <input type="file" id="image-upload" name="image" accept="image/*" required>
+            </div>
+
+            <div class="form-group">
+                <label for="prompt-input">2. 텍스트 프롬프트:</label>
+                <input type="text" id="prompt-input" name="prompt" placeholder="예: a beautiful house in the forest">
+            </div>
+
+            <div class="form-group">
+                <label for="style-select">3. 스타일 선택:</label>
+                <select id="style-select" name="style">
+                    <option value="monet">모네 (Monet)</option>
+                    <option value="van gogh">반 고흐 (Van Gogh)</option>
+                    <option value="anime">애니메이션 (Anime)</option>
+                    <option value="pixel art">픽셀 아트 (Pixel Art)</option>
+                </select>
+            </div>
+            
+            <button type="submit">이미지 생성</button>
+        </form>
+
+        <div id="loading" class="hidden">
+            <p>이미지를 생성하는 중입니다... 잠시만 기다려 주세요.</p>
+        </div>
+
+        <div id="result" class="hidden">
+            <h2>생성된 이미지:</h2>
+            <img id="result-image" src="" alt="생성된 이미지">
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('image-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('result').classList.add('hidden');
+
+            fetch('/generate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.image_url) {
+                    const resultImage = document.getElementById('result-image');
+                    resultImage.src = data.image_url;
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('result').classList.remove('hidden');
+                } else {
+                    alert('이미지 생성에 실패했습니다: ' + data.error);
+                    document.getElementById('loading').classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('요청 중 오류가 발생했습니다.');
+                document.getElementById('loading').classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
