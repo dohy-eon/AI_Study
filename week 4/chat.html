@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Ollama Chat</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f7f7f7; margin: 0; }
+        .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 24px; }
+        h2 { text-align: center; color: #333; }
+        #chat { height: 320px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; padding: 12px; background: #fafafa; margin-bottom: 16px; }
+        .msg { margin-bottom: 12px; }
+        .user { color: #0078d4; font-weight: bold; }
+        .ai { color: #2d7d46; font-weight: bold; }
+        #input { width: 80%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        #send { padding: 8px 16px; border-radius: 4px; border: none; background: #0078d4; color: #fff; cursor: pointer; }
+        #send:hover { background: #005fa3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ollama Chat</h2>
+        <div id="chat"></div>
+        <div id="story">퀘스트: 신비한 세계에서 보물을 찾기 위한 단서를 해독하세요.<br>당신은 주인공이 되어 다양한 캐릭터와 대화하며 영어를 자연스럽게 익힙니다.<br>게임처럼 재미있고 몰입감 있는 퀘스트를 따라가며 외국어 실력을 키워보세요!</div>
+        <form id="form" autocomplete="off">
+            <input type="text" id="input" placeholder="메시지를 입력하세요..." required />
+            <button type="submit" id="send">전송</button>
+        </form>
+    </div>
+    <script>
+        const chat = document.getElementById('chat');
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+
+        function addMsg(role, content) {
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerHTML = `<span class="${role}">${role === 'user' ? '나' : 'AI'}:</span> ${content}`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const text = input.value.trim();
+            if (!text) return;
+            addMsg('user', text);
+            input.value = '';
+            const story = document.getElementById('story').innerText;
+            try {
+                const res = await fetch('http://localhost:5000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: text, story: story })
+                });
+                const data = await res.json();
+                addMsg('ai', data.answer || '오류 발생');
+            } catch (err) {
+                addMsg('ai', '서버 연결 오류');
+            }
+        };
+    </script>
+</body>
+</html>
